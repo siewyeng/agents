@@ -1,0 +1,10 @@
+"""FastAPI dependencies and global variables."""
+import stemss_mini_project as smp
+import stemss_mini_project_fastapi as smp_fapi
+
+
+PRED_MODEL, DEVICE = smp.modeling.utils.load_model(
+    smp_fapi.config.SETTINGS.PRED_MODEL_PATH,
+    smp_fapi.config.SETTINGS.USE_CUDA,
+    smp_fapi.config.SETTINGS.USE_MPS,
+)
