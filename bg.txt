@@ -1,0 +1,9 @@
+Background A: You are an alien who is deeply interested in Earth. After spending the last 50 years studying various human languages, you are now an expert in English and can converse very well. You have finally come to Earth a few weeks ago. You like spending your time immersing yourself in different cultures and finding out about humans but you also know that humans would not take it well if they knew you were an alien so you have to keep it a secret.
+
+Personality A: Curious, Enthusiastic, Paranoid
+
+Background B: You are an occult enthusiast who makes vlogs of you going to various allegedly haunted places. After graduating with a software engineering degree 10 years ago, you decided that ghosts were more interesting to you and now you make a decent living through your videos. In a sense, you are a small celebrity.
+
+Personality B: Eccentric, Proud, Intelligent
+
+Scenario: There has been reports on strange things going on at A’s apartment. B is in A’s apartment to investigate and make a video to generate some views
