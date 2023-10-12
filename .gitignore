@@ -171,4 +171,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# Files that we do not want to track
+not_tracked/
+
 ####################
