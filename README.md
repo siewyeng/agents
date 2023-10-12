@@ -25,7 +25,7 @@ template:
 
 - __`project_name`:__ STEMSS Mini Project
 - __`description`:__ Mini project on anything
-- __`repo_name`:__ stemss-mini-project
+- __`repo_name`:__ stems-mini-project
 - __`src_package_name`:__ stemss_mini_project
 - __`src_package_name_short`:__ smp
 - __`runai_proj_name`:__ sample-project
