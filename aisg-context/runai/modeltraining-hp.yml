@@ -1,0 +1,61 @@
+apiVersion: run.ai/v2alpha1
+kind: TrainingWorkload
+metadata:
+  name: STEMSS-hp-train
+  namespace: runai-sample-project
+spec:
+  environment:
+    items:
+      WORKSPACE_NAME:
+        value: <YOUR_HYPHENATED_NAME>
+      MLFLOW_TRACKING_URI:
+        value: <MLFLOW_TRACKING_URI>
+      MLFLOW_EXP_NAME:
+        value: STEMSS-stems-mini-project
+      AWS_ACCESS_KEY_ID:
+        value: SECRET:s3-credentials,accessKeyId
+      AWS_SECRET_ACCESS_KEY:
+        value: SECRET:s3-credentials,secretAccessKey
+      MLFLOW_S3_ENDPOINT_URL:
+        value: https://necs.nus.edu.sg
+      MLFLOW_TRACKING_USERNAME:
+        value: SECRET:mlflow-admin-credentials,username
+      MLFLOW_TRACKING_PASSWORD:
+        value: SECRET:mlflow-admin-credentials,password
+  name:
+    value: STEMSS-hp-train
+  image: 
+    value: registry.aisingapore.net/aiap-14-dsp/stems-mini-project/model-training:0.1.0
+  imagePullPolicy:
+    value: Always
+  command:
+    value: >-
+      /bin/bash -c "export MLFLOW_HPTUNING_TAG=$(date +%s) && source activate stems-mini-project && python src/train_model.py --multirun
+      train_model.data_dir_path=/sample-project-pvc/workspaces/$WORKSPACE_NAME/data/processed/mnist-pngs-data-aisg-processed
+      train_model.model_checkpoint_dir_path=/sample-project-pvc/workspaces/$WORKSPACE_NAME/stems-mini-project/models
+      train_model.setup_mlflow=true train_model.epochs=3
+      train_model.mlflow_tracking_uri=$MLFLOW_TRACKING_URI
+      train_model.mlflow_exp_name=$MLFLOW_EXP_NAME"
+  workingDir:
+    value: /sample-project-pvc/workspaces/$WORKSPACE_NAME/stems-mini-project
+  cpu:
+    value: '2'
+  cpuLimit:
+    value: '2'
+  memory:
+    value: 4G
+  memoryLimit:
+    value: 4G
+  pvcs:
+    items:
+      pvc-0:
+        value:
+          claimName: sample-project-pvc
+          existingPvc: false
+          path: /sample-project-pvc
+          readOnly: false
+          readWriteMany: true
+          size: 1000G
+          storageClass: nfs-client
+  username:
+    value: STEMSS
