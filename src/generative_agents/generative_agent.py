@@ -96,6 +96,7 @@ class StemssGenerativeAgent(GenerativeAgent):
         )
         agent_summary_description = self.get_summary()
         relevant_memories_str = self.summarize_speaker_memories(speaker, observation)
+        print("Thought: ",relevant_memories_str)
         current_time_str = datetime.now().strftime("%B %d, %Y, %I:%M %p")
         kwargs: Dict[str, Any] = dict(
             agent_summary_description=agent_summary_description,

@@ -2,6 +2,7 @@ import logging
 import re
 from datetime import datetime
 from typing import List
+from csv import writer
 
 from langchain.prompts import PromptTemplate
 from langchain.schema import Document
@@ -24,6 +25,8 @@ class StemssGenerativeAgentMemory(GenerativeAgentMemory):
         )
         prompt = PromptTemplate.from_template(template)
 
+        mem_file: str
+
         score = self.chain(prompt).run(memory_content=memory_content).strip()
 
         logger.warning(f"Importance score: {score}")
@@ -45,3 +48,10 @@ class StemssGenerativeAgentMemory(GenerativeAgentMemory):
             )
             content.append(f"- {created_time}: {mem.page_content.strip()}")
         return "\n".join([f"{mem}" for mem in content])
+    
+    def addToCSV():
+        with open('event.csv', 'a') as f_object:
+
+            writer_object = writer(f_object)
+            writer_object.writerow(List)
+            f_object.close()
