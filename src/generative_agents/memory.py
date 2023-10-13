@@ -19,10 +19,6 @@ class StemssGenerativeAgentMemory(GenerativeAgentMemory):
             + " extremely important (e.g., a break up, college"
             + " acceptance), rate the importance of the"
             + " following piece of memory. You must respond with a single integer."
-            + "\nMemory: I met my wife Jane when I was 23"
-            + "\nRating: 9"
-            "\nMemory: I visited Italy in 2020"
-            "\nRating: 5"
             "\nMemory: {memory_content}"
             "\nRating: "
         )
