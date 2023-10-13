@@ -62,7 +62,7 @@ class Generate_Schedule:
         set of plans and include at least 15 individual plans. The plan\
         list should be numbered in the order in which they should be performed, with each plan containing a description\
         with at least 10 words and never use the word /'repeat/'\
-        Example plan: ['Plan to take dinner with my spouse at home']\
+        Example plan: ['Plan to take dinner with their spouse at home']\
         Try to collaborate with spouse if possible\
         The location can only be office or home\
         Do not mention about repeating or evaluating the plan\
