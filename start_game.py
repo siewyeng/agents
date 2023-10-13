@@ -2,6 +2,7 @@ import argparse
 import os
 from typing import List
 
+from dotenv import load_dotenv
 from langchain.document_loaders import CSVLoader
 from langchain.embeddings import VertexAIEmbeddings
 from langchain.llms import VertexAI
@@ -14,20 +15,36 @@ from src.generative_agents.memory import StemssGenerativeAgentMemory
 from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
 from src.vectorstores.chroma import EnhancedChroma
 
-os.environ[
-    "GOOGLE_APPLICATION_CREDENTIALS"
-] = "./credentials/aiap-14-ds-llm-topic-01-sa.json"
+# Load the .env file
+load_dotenv()
 
+# Get the path of Google Cloud credentials from the environment variable
+google_creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-embeddings_model = VertexAIEmbeddings()
+# Optionally: Ensure that the variable has been set correctly
+if google_creds_path is None:
+    raise ValueError("GOOGLE_APPLICATION_CREDENTIALS is not set in the .env file")
+else:
+    print(f"GOOGLE_APPLICATION_CREDENTIALS set to {google_creds_path}")
 
+mem_file = "./memory/memory.csv"
 
-def test():
+"""
+def create_model():
     llm = VertexAI(model_name="text-bison@001", max_output_tokens=256, temperature=0.2)
     return llm
 
 
-mem_file = "./memory/memory.csv"
+def create_embeddings():
+    embeddings_model = VertexAIEmbeddings()
+    return embeddings_model
+
+
+test = create_model()
+
+print(test)
+# print(create_embeddings())
+"""
 
 
 def load_documents() -> List[Document]:
@@ -69,7 +86,6 @@ if __name__ == "__main__":
 
     docs = load_documents()
 
-    """
     memory_retriever = create_new_memory_retriever(decay_rate=args.decay, k=args.top_k)
     memory_retriever.add_documents(docs)
 
@@ -93,4 +109,3 @@ if __name__ == "__main__":
     )
 
     print(joel.get_summary())
-"""
