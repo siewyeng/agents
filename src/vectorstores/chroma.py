@@ -2,7 +2,7 @@ import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import chromadb
-from chromadb.errors import NoIndexException
+# from chromadb.errors import NoIndexException
 from langchain.schema import Document
 from langchain.vectorstores import Chroma
 
@@ -48,7 +48,7 @@ class EnhancedChroma(Chroma):
             return [
                 (doc, self.relevance_score_fn(score)) for doc, score in docs_and_scores
             ]
-        except NoIndexException:
+        except:
             return []
 
     def similarity_search_with_score(
