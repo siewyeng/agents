@@ -29,23 +29,6 @@ else:
 
 mem_file = "./memory/memory.csv"
 
-"""
-def create_model():
-    llm = VertexAI(model_name="text-bison@001", max_output_tokens=256, temperature=0.2)
-    return llm
-
-
-def create_embeddings():
-    embeddings_model = VertexAIEmbeddings()
-    return embeddings_model
-
-
-test = create_model()
-
-print(test)
-# print(create_embeddings())
-"""
-
 
 def load_documents() -> List[Document]:
     """ "Load memory (history) from CSV "
@@ -82,7 +65,6 @@ if __name__ == "__main__":
     parser.add_argument("-k", "--top_k", type=int, help="top_k to return", default=5)
 
     args = parser.parse_args()
-    # print(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
 
     docs = load_documents()
 
