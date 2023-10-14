@@ -71,9 +71,12 @@ if __name__ == "__main__":
     path='./outputs'
     all_folders = os.listdir(path)
     new = 1
+    index = []
     if len(all_folders)!=0:
-        all_folders.sort()
-        latest = all_folders[-1].replace('run_', '')
+        for folder in all_folders:
+            index.append(int(folder.replace('run_', '')))
+        index.sort()
+        latest = index[-1]
         new = int(latest) + 1
     new_path = f"{path}/run_{new}"
     os.makedirs(new_path)

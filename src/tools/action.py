@@ -15,7 +15,8 @@ def run_conversation(
     agents: List[StemssGenerativeAgent], initial_observation: str
 ) -> None:
     """Runs a conversation between agents and prints observations at every turn"""
-    _, observation = agents[1].generate_reaction(initial_observation)
+    print(initial_observation)
+    _, observation = agents[1].generate_reaction(observation=initial_observation)
     print(observation)
     turns = 0
     while True:
