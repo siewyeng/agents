@@ -17,6 +17,7 @@ from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRet
 from src.vectorstores.chroma import EnhancedChroma
 from src.generators.schedule import generate_schedule
 from src.generators.agent import generate_agent_name, generate_characters
+from src.tools.action import interview_agent, run_conversation
 
 # Load the .env file
 load_dotenv()
@@ -78,13 +79,14 @@ if __name__ == "__main__":
     os.makedirs(new_path)
     os.makedirs(f"{new_path}/memory")
 
-    llm = VertexAI(model_name="text-bison@001", max_output_tokens=256, temperature=0.2)
 
     agents = []
     #Generate agent
+    llm = VertexAI(model_name="text-bison@001", max_output_tokens=256, temperature=0.2)
     agent_names = generate_agent_name(model=llm, num_of_agents=2)
     for agent_name in agent_names:
 
+        llm = VertexAI(model_name="text-bison@001", max_output_tokens=256, temperature=0.7)
         #generate agent details
         agent_details = generate_characters(model=llm, agent_name=agent_name)
         agent_details['name']=agent_name
@@ -121,11 +123,15 @@ if __name__ == "__main__":
             memory=agent_memory,
             background=agent_details["background"],
         )
-        # agent.schedule = generate_schedule(model=llm, agent=agent)
-        observations = generate_schedule(model=llm, agent=agent)
-        for observation in observations:
-            agent.memory.add_memory(observation)
+        agent.get_summary()
         agents.append(agent)
 
-    for agent in agents:
-        print(agent.get_summary())
+    for single_agent in agents:
+        observations = generate_schedule(model=llm, agent=single_agent)
+        for observation in observations:
+            single_agent.memory.add_memory(observation)
+
+    for single_agent in agents:
+        print(single_agent.get_summary())
+
+    run_conversation(agents, f"You see {agents[1].name}")

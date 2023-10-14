@@ -1,4 +1,5 @@
-# for actions that can be called on the agents
+from typing import List
+
 from src.generative_agents.generative_agent import StemssGenerativeAgent
 
 USER_NAME = "STEMSS"
