@@ -17,7 +17,7 @@ from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRet
 from src.vectorstores.chroma import EnhancedChroma
 from src.generators.schedule import generate_schedule
 from src.generators.agent import generate_agent_name, generate_characters
-from src.tools.action import force_dialogue
+from src.tools.action import interview_agent, run_conversation
 
 # Load the .env file
 load_dotenv()
@@ -133,3 +133,5 @@ if __name__ == "__main__":
 
     for single_agent in agents:
         print(single_agent.get_summary())
+
+    run_conversation(agents, f"You see {agents[1].name}")
