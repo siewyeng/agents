@@ -49,7 +49,7 @@ class ModTimeWeightedVectorStoreRetriever(TimeWeightedVectorStoreRetriever):
         score = (1.0 - self.decay_rate) ** hours_passed
         for key in self.other_score_keys:
             if key in document.metadata:
-                score += int(document.metadata[key])
+                score += int(float(document.metadata[key]))
         if vector_relevance is not None:
             score += vector_relevance
         return score

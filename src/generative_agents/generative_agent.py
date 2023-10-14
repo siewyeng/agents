@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
@@ -140,6 +140,84 @@ class StemssGenerativeAgent(GenerativeAgent):
                 {
                     self.memory.add_memory_key: f"{self.name} observed "
                     f"{observation} and said {response_text}"
+                },
+            )
+            return True, f"{self.name} said {response_text}"
+        else:
+            return False, result
+        
+    def _generate_reaction(
+        self, observation: str, suffix: str, now: Optional[datetime] = None, conversation_history: List[str] = []
+    ) -> str:
+        """React to a given observation or dialogue act."""
+        prompt = PromptTemplate.from_template(
+            "{agent_summary_description}"
+            + "\nIt is {current_time}."
+            + "\n{agent_name}'s status: {agent_status}"
+            + "\nSummary of relevant context from {agent_name}'s memory:"
+            + "\n{relevant_memories}"
+            + "\nMost recent observations: {most_recent_memories}"
+            + "\nObservation: {observation}"
+            + "\n\n"
+            + suffix
+        )
+        agent_summary_description = self.get_summary(now=now)
+        print(agent_summary_description)
+        relevant_memories_str = self.summarize_related_memories(observation)
+        current_time_str = (
+            datetime.now().strftime("%B %d, %Y, %I:%M %p")
+            if now is None
+            else now.strftime("%B %d, %Y, %I:%M %p")
+        )
+        kwargs: Dict[str, Any] = dict(
+            agent_summary_description=agent_summary_description,
+            current_time=current_time_str,
+            relevant_memories=relevant_memories_str,
+            agent_name=self.name,
+            observation=observation,
+            agent_status=self.status,
+            most_recent_memories=conversation_history
+        )
+        consumed_tokens = self.llm.get_num_tokens(
+            prompt.format(**kwargs)
+        )
+        print(prompt.format(**kwargs))
+        kwargs[self.memory.most_recent_memories_token_key] = consumed_tokens
+        return self.chain(prompt=prompt).run(**kwargs).strip()
+    
+
+    def generate_dialogue_response(
+        self, observation: str, now: Optional[datetime] = None, conversation_history: List[str] = [],
+    ) -> Tuple[bool, str]:
+        """React to a given observation."""
+        call_to_action_template = (
+            "What would {agent_name} say? If the conversation is getting similar end it. To end the conversation, write:"
+            ' GOODBYE: "what to say". Otherwise to continue the conversation,'
+            ' write: SAY: "what to say next"\n\n'
+        )
+        full_result = self._generate_reaction(
+            observation, call_to_action_template, now=now, conversation_history=conversation_history
+        )
+        result = full_result.strip().split("\n")[0]
+        if "GOODBYE:" in result:
+            farewell = self._clean_response(result.split("GOODBYE:")[-1])
+            self.memory.save_context(
+                {},
+                {
+                    self.memory.add_memory_key: f"{self.name} observed "
+                    f"{observation} and said {farewell}",
+                    self.memory.now_key: now,
+                },
+            )
+            return False, f"{self.name} said {farewell}"
+        if "SAY:" in result:
+            response_text = self._clean_response(result.split("SAY:")[-1])
+            self.memory.save_context(
+                {},
+                {
+                    self.memory.add_memory_key: f"{self.name} observed "
+                    f"{observation} and said {response_text}",
+                    self.memory.now_key: now,
                 },
             )
             return True, f"{self.name} said {response_text}"
