@@ -251,12 +251,14 @@ if __name__ == "__main__":
                     my_bar.progress(
                         progress, text=f"Adding memories for {single_agent.name}"
                     )
-                    for observation in observations:
-                        single_agent.memory.add_memory(observation)
+                    with st_stdout("info"):
+                        for observation in observations:
+                            single_agent.memory.add_memory(observation)
 
-                for single_agent in agents:
-                    print(single_agent.get_summary())
-                    print("\n")
+                with st_stdout("code"):
+                    for single_agent in agents:
+                        print(single_agent.get_summary())
+                        print("\n")
                 progress += 10
                 my_bar.progress(progress, text="Completed")
 
