@@ -30,7 +30,7 @@ class ModTimeWeightedVectorStoreRetriever(TimeWeightedVectorStoreRetriever):
                 doc.metadata["last_accessed_at"] = str(current_time)
             if "created_at" not in doc.metadata:
                 doc.metadata["created_at"] = str(current_time)
-            self.addToCSV(doc.metadata["created_at"], doc.metadata["last_accessed_at"],doc.page_content.split("observations: ")[1],doc.metadata["importance"])
+            self.addToCSV(doc.metadata["created_at"], doc.metadata["last_accessed_at"],doc.page_content,doc.metadata["importance"])
             doc.metadata["buffer_idx"] = len(self.memory_stream) + i
         self.memory_stream.extend(dup_docs)
         return self.vectorstore.add_documents(dup_docs, **kwargs)

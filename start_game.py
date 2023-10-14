@@ -121,8 +121,11 @@ if __name__ == "__main__":
             memory=agent_memory,
             background=agent_details["background"],
         )
+        # agent.schedule = generate_schedule(model=llm, agent=agent)
+        observations = generate_schedule(model=llm, agent=agent)
+        for observation in observations:
+            agent.memory.add_memory(observation)
         agents.append(agent)
-        agent.schedule = generate_schedule(model=llm, agent=agent)
-        print(agent.schedule)
+
     for agent in agents:
         print(agent.get_summary())
