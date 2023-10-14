@@ -1,6 +1,7 @@
 import argparse
 import os
 from typing import List
+from csv import writer
 
 from dotenv import load_dotenv
 from langchain.document_loaders import CSVLoader
@@ -14,6 +15,8 @@ from src.generative_agents.generative_agent import StemssGenerativeAgent
 from src.generative_agents.memory import StemssGenerativeAgentMemory
 from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
 from src.vectorstores.chroma import EnhancedChroma
+from src.generators.schedule import generate_schedule
+from src.generators.agent import generate_agent_name, generate_characters
 
 # Load the .env file
 load_dotenv()
@@ -26,8 +29,6 @@ if google_creds_path is None:
     raise ValueError("GOOGLE_APPLICATION_CREDENTIALS is not set in the .env file")
 else:
     print(f"GOOGLE_APPLICATION_CREDENTIALS set to {google_creds_path}")
-
-mem_file = "./memory/memory.csv"
 
 
 def load_documents() -> List[Document]:
@@ -45,13 +46,13 @@ def load_documents() -> List[Document]:
     return docs
 
 
-def create_new_memory_retriever(decay_rate: float = 0.5, k: int = 5):
+def create_new_memory_retriever(decay_rate: float = 0.5, k: int = 5, mem_file:str="./memory/memory.csv"):
     """Create a new vector store retriever unique to the agent."""
     # Define your embedding model
     embeddings_model = VertexAIEmbeddings()
     vs = EnhancedChroma(embedding_function=embeddings_model)
     return ModTimeWeightedVectorStoreRetriever(
-        vectorstore=vs, other_score_keys=["importance"], decay_rate=decay_rate, k=k
+        vectorstore=vs, other_score_keys=["importance"], decay_rate=decay_rate, k=k, mem_file=mem_file
     )
 
 
@@ -66,28 +67,62 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    docs = load_documents()
-
-    memory_retriever = create_new_memory_retriever(decay_rate=args.decay, k=args.top_k)
-    memory_retriever.add_documents(docs)
+    path='./outputs'
+    all_folders = os.listdir(path)
+    new = 1
+    if len(all_folders)!=0:
+        all_folders.sort()
+        latest = all_folders[-1].replace('run_', '')
+        new = int(latest) + 1
+    new_path = f"{path}/run_{new}"
+    os.makedirs(new_path)
+    os.makedirs(f"{new_path}/memory")
 
     llm = VertexAI(model_name="text-bison@001", max_output_tokens=256, temperature=0.2)
 
-    joel_memory = StemssGenerativeAgentMemory(
-        llm=llm,
-        memory_retriever=memory_retriever,
-        reflection_threshold=8,  # we will give this a relatively low number to show how reflection works
-        verbose=True,
-    )
+    agents = []
+    #Generate agent
+    agent_names = generate_agent_name(model=llm, num_of_agents=2)
+    for agent_name in agent_names:
 
-    joel = StemssGenerativeAgent(
-        name="Joel",
-        age=52,
-        traits="curious, enthusiastic, paranoid",  # You can add more persistent traits here
-        status="going home for his birthday",  # When connected to a virtual world, we can have the characters update their status
-        memory_retriever=create_new_memory_retriever(),
-        llm=llm,
-        memory=joel_memory,
-    )
+        #generate agent details
+        agent_details = generate_characters(model=llm, agent_name=agent_name)
+        agent_details['name']=agent_name
 
-    print(joel.get_summary())
+        #Create csv if it doesn't exist
+        mem_file = f"{new_path}/memory/{agent_name}.csv"
+        if  not os.path.exists(mem_file):
+            with open(mem_file, 'a') as f_object:
+                List = ["created_at", "last_accessed_at", "observations", "importance"]
+                writer_object = writer(f_object)
+                writer_object.writerow(List)
+                f_object.close()
+
+        #Load CSV
+        docs = load_documents()
+        memory_retriever = create_new_memory_retriever(decay_rate=args.decay, k=args.top_k ,mem_file=mem_file)
+        if(len(docs)!=0):
+            memory_retriever.add_documents(docs)
+
+        agent_memory = StemssGenerativeAgentMemory(
+            llm=llm,
+            memory_retriever=memory_retriever,
+            reflection_threshold=8,  # we will give this a relatively low number to show how reflection works
+            verbose=True,
+        )
+
+        agent = StemssGenerativeAgent(
+            name=agent_name,
+            age=agent_details["age"],
+            traits=agent_details["traits"],
+            status="",
+            memory_retriever=create_new_memory_retriever(),
+            llm=llm,
+            memory=agent_memory,
+            background=agent_details["background"],
+        )
+        agents.append(agent)
+        agent.schedule = generate_schedule(model=llm, agent=agent)
+        print(agent.schedule)
+    for agent in agents:
+        print(agent.get_summary())
