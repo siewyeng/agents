@@ -1,8 +1,8 @@
 import logging
 import re
+from csv import writer
 from datetime import datetime
 from typing import List
-from csv import writer
 
 from langchain.prompts import PromptTemplate
 from langchain.schema import Document
@@ -48,10 +48,9 @@ class StemssGenerativeAgentMemory(GenerativeAgentMemory):
             )
             content.append(f"- {created_time}: {mem.page_content.strip()}")
         return "\n".join([f"{mem}" for mem in content])
-    
-    def addToCSV():
-        with open('event.csv', 'a') as f_object:
 
+    def addToCSV():
+        with open("event.csv", "a") as f_object:
             writer_object = writer(f_object)
             writer_object.writerow(List)
             f_object.close()

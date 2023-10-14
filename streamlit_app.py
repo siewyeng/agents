@@ -17,7 +17,7 @@ with st.sidebar:
     # selected
 
 if selected == "Home":
-    st.header("The world with only 2 agents and 4 overlords")
+    st.header("The world with only 2 agents but 4 overlords")
     st.caption("*Smaller than Smallville")
     st.image("./img/front.webp")
 elif selected == "Inject Memories":

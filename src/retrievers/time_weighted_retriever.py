@@ -1,7 +1,7 @@
 from copy import deepcopy
+from csv import writer
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
-from csv import writer
 
 from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain.retrievers import TimeWeightedVectorStoreRetriever
@@ -16,8 +16,8 @@ def _get_hours_passed(time: datetime, ref_time: datetime | str) -> float:
 
 
 class ModTimeWeightedVectorStoreRetriever(TimeWeightedVectorStoreRetriever):
+    mem_file: str
 
-    mem_file:str
     def add_documents(self, documents: List[Document], **kwargs: Any) -> List[str]:
         """Add documents to vectorstore."""
         current_time = kwargs.get("current_time")
@@ -30,7 +30,12 @@ class ModTimeWeightedVectorStoreRetriever(TimeWeightedVectorStoreRetriever):
                 doc.metadata["last_accessed_at"] = str(current_time)
             if "created_at" not in doc.metadata:
                 doc.metadata["created_at"] = str(current_time)
-            self.addToCSV(doc.metadata["created_at"], doc.metadata["last_accessed_at"],doc.page_content,doc.metadata["importance"])
+            self.addToCSV(
+                doc.metadata["created_at"],
+                doc.metadata["last_accessed_at"],
+                doc.page_content,
+                doc.metadata["importance"],
+            )
             doc.metadata["buffer_idx"] = len(self.memory_stream) + i
         self.memory_stream.extend(dup_docs)
         return self.vectorstore.add_documents(dup_docs, **kwargs)
@@ -54,11 +59,10 @@ class ModTimeWeightedVectorStoreRetriever(TimeWeightedVectorStoreRetriever):
             score += vector_relevance
         return score
 
-    def addToCSV(self, created_at, last_accessed_at, observations,importance):
+    def addToCSV(self, created_at, last_accessed_at, observations, importance):
         List = [created_at, last_accessed_at, observations, importance]
 
-        with open(self.mem_file, 'a') as f_object:
-
+        with open(self.mem_file, "a") as f_object:
             writer_object = writer(f_object)
             writer_object.writerow(List)
             f_object.close()
