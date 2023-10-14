@@ -7,13 +7,7 @@ from langchain_experimental.generative_agents.generative_agent import Generative
 
 
 class StemssGenerativeAgent(GenerativeAgent):
-    background:str
-    system_prompt: str = (
-        "A chat between a curious user and an artificial intelligence assistant. The assistant "
-        "gives helpful, detailed, and polite answers to the user's questions.\n"
-        "###USER: %s\n"
-        "###ASSISTANT: "
-    )
+    background: str
     schedule: List[str] = []
 
     def chain(self, prompt: PromptTemplate) -> LLMChain:
@@ -27,7 +21,7 @@ class StemssGenerativeAgent(GenerativeAgent):
             f"Extract the entity from the following observation without explanation.\n"
             f"Observation: {observation}\n"
         )
-        prompt = PromptTemplate.from_template(self.system_prompt % instruction)
+        prompt = PromptTemplate.from_template(instruction)
         return self.chain(prompt).run(observation=observation).strip()
 
     def _get_entity_action(self, observation: str, entity_name: str) -> str:
@@ -35,13 +29,18 @@ class StemssGenerativeAgent(GenerativeAgent):
             f"What is the {entity_name} doing in the following observation?\n"
             f"Observation: {observation}\n"
         )
-        prompt = PromptTemplate.from_template(self.system_prompt % instruction)
-        return self.chain(prompt).run(entity=entity_name, observation=observation).strip()
+        prompt = PromptTemplate.from_template(instruction)
+        return (
+            self.chain(prompt).run(entity=entity_name, observation=observation).strip()
+        )
 
     def summarize_related_memories(self, observation: str) -> str:
         """Summarize memories that are most relevant to an observation."""
         prompt = PromptTemplate.from_template(
-            "{q1}?\n" "Context from memory:\n" "{relevant_memories}\n" "Relevant context:"
+            "{q1}?\n"
+            "Context from memory:\n"
+            "{relevant_memories}\n"
+            "Relevant context:"
         )
         entity_name = self._get_entity_from_observation(observation)
         entity_action = self._get_entity_action(observation, entity_name)
@@ -49,13 +48,13 @@ class StemssGenerativeAgent(GenerativeAgent):
         q2 = f"{entity_name} is {entity_action}"
         return self.chain(prompt=prompt).run(q1=q1, queries=[q1, q2]).strip()
 
-    def summarize_speaker_memories(self, speaker: str, observation: str) -> str:
+    def summarize_related_memories(self, speaker: str, observation: str) -> str:
         instruction = (
             f"what is the most possible relationship between {self.name} and {speaker} in the"
             f" following observation? Do not embellish if you don't know. Do not return a list.\n"
             "Observation: {relevant_memories}\n"
         )
-        prompt = PromptTemplate.from_template(self.system_prompt % instruction)
+        prompt = PromptTemplate.from_template(instruction)
         return (
             self.chain(prompt=prompt)
             .run(me=self.name, speaker=speaker, queries=[f"{speaker}"])
@@ -75,10 +74,13 @@ class StemssGenerativeAgent(GenerativeAgent):
         # The agent seeks to think about their core characteristics.
         return (
             self.chain(prompt)
-            .run(name=self.name,background=self.background, queries=[f"{self.name}'s core characteristics"])
+            .run(
+                name=self.name,
+                background=self.background,
+                queries=[f"{self.name}'s core characteristics"],
+            )
             .strip()
         )
-    
 
     def _generate_dialogue_reaction(
         self, speaker: str, observation: str, suffix: str
@@ -95,8 +97,9 @@ class StemssGenerativeAgent(GenerativeAgent):
             + "\n\n"
             + suffix
         )
+
         agent_summary_description = self.get_summary()
-        relevant_memories_str = self.summarize_speaker_memories(speaker, observation)
+        relevant_memories_str = self.summarize_related_memories(speaker, observation)
         current_time_str = datetime.now().strftime("%B %d, %Y, %I:%M %p")
         kwargs: Dict[str, Any] = dict(
             agent_summary_description=agent_summary_description,
