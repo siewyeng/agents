@@ -9,9 +9,15 @@ from langchain.prompts import PromptTemplate
 from langchain.schema import Document
 from langchain_experimental.generative_agents.memory import GenerativeAgentMemory
 
-stdout_handler = logging.StreamHandler(sys.stdout)
-logging.basicConfig(level=logging.INFO, handlers=[stdout_handler])
 logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logger = logging.getLogger(__name__)
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    logger.addHandler(stdout_handler)
+    # stdout_handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.addHandler(stdout_handler)
+    # logger.setLevel(logging.INFO)
 
 
 class StemssGenerativeAgentMemory(GenerativeAgentMemory):
@@ -28,14 +34,12 @@ class StemssGenerativeAgentMemory(GenerativeAgentMemory):
         )
         prompt = PromptTemplate.from_template(template)
 
-        mem_file: str
-
         score = self.chain(prompt).run(memory_content=memory_content).strip()
-
-        logger.warning(f"Importance score: {score}")
+        if self.verbose:
+            logger.info(f"Importance score: {score}")
         match = re.search(r"^\D*(\d+)", score)
         if match:
-            return (float(score[0]) / 10) * self.importance_weight
+            return (float(match.group(1)) / 10) * self.importance_weight
         else:
             return 0.0
 
