@@ -1,9 +1,7 @@
+import logging
 import os
 import sys
-from contextlib import contextmanager
 from csv import writer
-from io import StringIO
-from threading import current_thread
 from typing import List
 
 import streamlit as st
@@ -12,7 +10,6 @@ from langchain.document_loaders import CSVLoader
 from langchain.embeddings import VertexAIEmbeddings
 from langchain.llms import VertexAI
 from langchain.schema import Document
-from streamlit.runtime.scriptrunner.script_run_context import SCRIPT_RUN_CONTEXT_ATTR_NAME
 from streamlit_option_menu import option_menu
 
 from src.generative_agents.generative_agent import StemssGenerativeAgent
@@ -20,41 +17,15 @@ from src.generative_agents.memory import StemssGenerativeAgentMemory
 from src.generators.agent import generate_agent_name, generate_characters
 from src.generators.schedule import generate_schedule
 from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
+from src.utils import streamlit_utils
 from src.vectorstores.chroma import EnhancedChroma
 
-
-@contextmanager
-def st_redirect(src, dst):
-    placeholder = st.empty()
-    output_func = getattr(placeholder, dst)
-
-    with StringIO() as buffer:
-        old_write = src.write
-
-        def new_write(b):
-            if getattr(current_thread(), SCRIPT_RUN_CONTEXT_ATTR_NAME, None):
-                buffer.write(b)
-                output_func(buffer.getvalue())
-            else:
-                old_write(b)
-
-        try:
-            src.write = new_write
-            yield
-        finally:
-            src.write = old_write
-
-
-@contextmanager
-def st_stdout(dst):
-    with st_redirect(sys.stdout, dst):
-        yield
-
-
-@contextmanager
-def st_stderr(dst):
-    with st_redirect(sys.stderr, dst):
-        yield
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logger = logging.getLogger(__name__)
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    logger.addHandler(stdout_handler)
 
 
 def load_documents() -> List[Document]:
@@ -88,6 +59,27 @@ def create_new_memory_retriever(
     )
 
 
+def create_memory_bank():
+    # Location of agent's memory from each run
+    path = "./outputs"
+    all_folders = os.listdir(path)
+    new = 1
+    if len(all_folders) != 0:
+        all_folders.sort()
+        latest = all_folders[-1].replace("run_", "")
+        new = int(latest) + 1
+    new_path = f"{path}/run_{new}"
+    os.makedirs(new_path)
+    os.makedirs(f"{new_path}/memory")
+    return new_path
+
+
+def interview_agent(agent: StemssGenerativeAgent, message: str) -> str:
+    """Help the notebook user interact with the agent."""
+    new_message = f"{USER_NAME} says {message}"
+    return agent.generate_dialogue_response(new_message)[1]
+
+
 if __name__ == "__main__":
     # Model and folders to be initialized once everything the app runs
     if "initalized" not in st.session_state:
@@ -102,21 +94,11 @@ if __name__ == "__main__":
             print(f"GOOGLE_APPLICATION_CREDENTIALS set to {google_creds_path}")
         # Instantiate and store llm to session state
         llm = VertexAI(
-            model_name="text-bison@001", max_output_tokens=256, temperature=0.2
+            model_name="text-bison@001", max_output_tokens=256, temperature=0.7
         )
         st.session_state["llm"] = llm
 
-        # Location of agent's memory from each run
-        path = "./outputs"
-        all_folders = os.listdir(path)
-        new = 1
-        if len(all_folders) != 0:
-            all_folders.sort()
-            latest = all_folders[-1].replace("run_", "")
-            new = int(latest) + 1
-        new_path = f"{path}/run_{new}"
-        os.makedirs(new_path)
-        os.makedirs(f"{new_path}/memory")
+        new_path = create_memory_bank()
         st.session_state["new_path"] = new_path
 
         st.session_state["initalized"] = True
@@ -124,16 +106,18 @@ if __name__ == "__main__":
     if "selected_option" not in st.session_state:
         st.session_state["selected_option"] = "Home"
 
+    # Navigation Menu
     with st.sidebar:
         selected = option_menu(
             "Navigation",
             [
                 "Home",
                 "Settings",
-                "Agents and Controls",
+                "Initalize Agents",
+                "Interact with Agents",
                 "View Detailed Logs",
             ],
-            icons=["house", "gear", "person", "search"],
+            icons=["house", "gear", "person", "chat-left-dots", "search"],
             menu_icon="list",
             default_index=0,
         )
@@ -150,11 +134,27 @@ if __name__ == "__main__":
     # Settings page
     if st.session_state["selected_option"] == "Settings":
         st.title("All settings")
-        st.header("Retriever related settings")
+        st.header("Retriever settings")
         st.session_state["decay_rate"] = st.slider("Decay Rate", 0.0, 1.0, 0.2, 0.05)
         st.session_state["top_k"] = st.slider("Top K", 1, 10, 5, 1)
+        st.divider()
+        st.header("LLM settings")
+        st.session_state["model_name"] = st.text_input(
+            "Which model to use?", value="text-bison@001"
+        )
+        st.session_state["temperature"] = st.slider("Temperature", 0.0, 1.0, 0.7, 0.05)
+        st.session_state["max_output_tokens"] = st.number_input(
+            "Max Output Tokens", 1, 2048, 256
+        )
+        if st.button("Reinitialize LLM"):
+            llm = VertexAI(
+                model_name=st.session_state["model_name"],
+                max_output_tokens=st.session_state["max_output_tokens"],
+                temperature=st.session_state["temperature"],
+            )
+            st.session_state["llm"] = llm
 
-    if st.session_state["selected_option"] == "Agents and Controls":
+    if st.session_state["selected_option"] == "Initalize Agents":
         st.header("Agents Initialization")
         st.divider()
         st.write("Agent names are generated randomly")
@@ -251,11 +251,11 @@ if __name__ == "__main__":
                     my_bar.progress(
                         progress, text=f"Adding memories for {single_agent.name}"
                     )
-                    with st_stdout("info"):
+                    with streamlit_utils.st_stdout("code"):
                         for observation in observations:
                             single_agent.memory.add_memory(observation)
 
-                with st_stdout("code"):
+                with streamlit_utils.st_stdout("info"):
                     for single_agent in agents:
                         print(single_agent.get_summary())
                         print("\n")
@@ -266,15 +266,31 @@ if __name__ == "__main__":
                 # To resolve the list index out of range error
                 memory_retriever.vectorstore.delete_collection()
 
-        st.header("Control Agents")
-        st.divider()
-        st.write("Inject Memories")
-
-    # if st.session_state["selected_option"] == "Agents and Controls":
-    # st.info(st.session_state["agent_names"])
-
-    # x = st.text_area("Write the memory you would like to inject")
-    # st.button("Inject memories", on_click=pass)
+    # Interact with Agents page
+    if st.session_state["selected_option"] == "Interact with Agents":
+        if "agent_names" not in st.session_state:
+            st.header("No agents to interact with")
+        else:
+            agent_names = st.session_state["agent_names"]
+            agents = st.session_state["agents"]
+            st.header("Interact with Agents")
+            st.divider()
+            selected_agent = st.radio(
+                "Which agent do you want to interact with?",
+                [agent_name for agent_name in agent_names],
+            )
+            selected_idx = agent_names.index(selected_agent)
+            st.divider()
+            st.subheader("View summary of agent")
+            if st.button("View"):
+                with streamlit_utils.st_stdout("info"):
+                    print(agents[selected_idx].get_summary())
+            st.divider()
+            st.subheader("Inject Memories")
+            mem_to_inject = st.text_input("Memory to inject", value="")
+            if st.button("Inject"):
+                agents[selected_idx].memory.add_memory(mem_to_inject)
+                st.write(f"{selected_agent} suddenly experiences deja vu")
 
     if st.session_state["selected_option"] == "View Interactions":
         pass
