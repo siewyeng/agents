@@ -16,7 +16,7 @@ from src.generative_agents.memory import StemssGenerativeAgentMemory
 from src.generators.agent import generate_agent_name, generate_characters
 from src.generators.schedule import generate_schedule
 from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
-from src.tools.action import force_dialogue
+from src.tools.action import force_dialogue, interview_agent, run_conversation
 from src.vectorstores.chroma import EnhancedChroma
 
 # Load the .env file
@@ -77,9 +77,12 @@ if __name__ == "__main__":
     path = "./outputs"
     all_folders = os.listdir(path)
     new = 1
+    index = []
     if len(all_folders) != 0:
-        all_folders.sort()
-        latest = all_folders[-1].replace("run_", "")
+        for folder in all_folders:
+            index.append(int(folder.replace("run_", "")))
+        index.sort()
+        latest = index[-1]
         new = int(latest) + 1
     new_path = f"{path}/run_{new}"
     os.makedirs(new_path)
@@ -139,3 +142,5 @@ if __name__ == "__main__":
 
     for single_agent in agents:
         print(single_agent.get_summary())
+
+    run_conversation(agents, f"You see {agents[1].name}")

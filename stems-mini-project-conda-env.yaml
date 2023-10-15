@@ -13,6 +13,3 @@ dependencies:
     - transformers
     - langchain_experimental
     - python-dotenv
-    - setuptools
-    - grpcio==1.36.1
-    - cygrpc
