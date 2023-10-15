@@ -10,13 +10,15 @@ from langchain.document_loaders import CSVLoader
 from langchain.embeddings import VertexAIEmbeddings
 from langchain.llms import VertexAI
 from langchain.schema import Document
+from streamlit_extras.stateful_chat import add_message, chat
 from streamlit_option_menu import option_menu
 
 from src.generative_agents.generative_agent import StemssGenerativeAgent
 from src.generative_agents.memory import StemssGenerativeAgentMemory
 from src.generators.agent import generate_agent_name, generate_characters
 from src.generators.schedule import generate_schedule
-from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
+from src.retrievers.time_weighted_retriever import \
+    ModTimeWeightedVectorStoreRetriever
 from src.utils import streamlit_utils
 from src.vectorstores.chroma import EnhancedChroma
 
@@ -74,9 +76,15 @@ def create_memory_bank():
     return new_path
 
 
-def interview_agent(agent: StemssGenerativeAgent, message: str) -> str:
+def memory_fix():
+    # To resolve the list index out of range error
+    memory_retriever = create_new_memory_retriever()
+    memory_retriever.vectorstore.delete_collection()
+
+
+def interview_agent(agent: StemssGenerativeAgent, user_name: str, message: str) -> str:
     """Help the notebook user interact with the agent."""
-    new_message = f"{USER_NAME} says {message}"
+    new_message = f"{user_name} says {message}"
     return agent.generate_dialogue_response(new_message)[1]
 
 
@@ -98,9 +106,14 @@ if __name__ == "__main__":
         )
         st.session_state["llm"] = llm
 
+        # Path output folder and memory storage
         new_path = create_memory_bank()
         st.session_state["new_path"] = new_path
 
+        # Execute list index out of range workaround
+        memory_fix()
+
+        # Set initialized flag to true
         st.session_state["initalized"] = True
 
     if "selected_option" not in st.session_state:
@@ -155,12 +168,12 @@ if __name__ == "__main__":
             st.session_state["llm"] = llm
 
     if st.session_state["selected_option"] == "Initalize Agents":
-        st.header("Agents Initialization")
+        st.title("Agents Initialization")
         st.divider()
-        st.write("Agent names are generated randomly")
-
         set_bool = st.checkbox("Retriever settings set?")
+
         if set_bool:
+            st.subheader("Agent names are generated randomly")
             if st.button("Generate Agents"):
                 progress = 0
                 my_bar = st.progress(progress, text="Generating agents. Please wait.")
@@ -263,8 +276,6 @@ if __name__ == "__main__":
                 my_bar.progress(progress, text="Completed")
 
                 st.success("Successfully generated all agents")
-                # To resolve the list index out of range error
-                memory_retriever.vectorstore.delete_collection()
 
     # Interact with Agents page
     if st.session_state["selected_option"] == "Interact with Agents":
@@ -290,9 +301,18 @@ if __name__ == "__main__":
             mem_to_inject = st.text_input("Memory to inject", value="")
             if st.button("Inject"):
                 agents[selected_idx].memory.add_memory(mem_to_inject)
-                st.write(f"{selected_agent} suddenly experiences deja vu")
+                st.text(f"{selected_agent} suddenly experiences deja vu")
+            st.divider()
+            st.subheader("Chat with Agent")
+            user_name = st.text_input("What is your name?", value="")
+            things_to_say = st.text_input("What do you want to ask/talk about?", value="")
+            st.session_state["things_to_say"] = things_to_say
+            if st.button("Chat"):
+                reply = interview_agent(agents[selected_idx], user_name, things_to_say)
+                st.session_state["reply"] = reply
+                with chat():
+                    add_message("user", things_to_say)
+                    add_message("assistant", reply)
 
-    if st.session_state["selected_option"] == "View Interactions":
-        pass
     if st.session_state["selected_option"] == "View Detailed Logs":
         st.info("WIP. spot for logs")
