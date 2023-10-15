@@ -1,5 +1,6 @@
 import logging
 import re
+import sys
 from csv import writer
 from datetime import datetime
 from typing import List
@@ -8,6 +9,8 @@ from langchain.prompts import PromptTemplate
 from langchain.schema import Document
 from langchain_experimental.generative_agents.memory import GenerativeAgentMemory
 
+stdout_handler = logging.StreamHandler(sys.stdout)
+logging.basicConfig(level=logging.INFO, handlers=[stdout_handler])
 logger = logging.getLogger(__name__)
 
 
