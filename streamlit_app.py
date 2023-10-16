@@ -6,10 +6,8 @@ from typing import List
 
 import streamlit as st
 from dotenv import load_dotenv
-from langchain.document_loaders import CSVLoader
 from langchain.embeddings import VertexAIEmbeddings
 from langchain.llms import VertexAI
-from langchain.schema import Document
 from streamlit_extras.stateful_chat import add_message, chat
 from streamlit_option_menu import option_menu
 
@@ -18,7 +16,7 @@ from src.generative_agents.memory import StemssGenerativeAgentMemory
 from src.generators.agent import generate_agent_name, generate_characters
 from src.generators.schedule import generate_schedule
 from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
-from src.utils import streamlit_utils
+from src.utils import general_utlis, streamlit_utils
 from src.vectorstores.chroma import EnhancedChroma
 
 logger = logging.getLogger(__name__)
@@ -29,28 +27,23 @@ if not logger.handlers:
     logger.addHandler(stdout_handler)
 
 
-def load_documents() -> List[Document]:
-    """ "Load memory (history) from CSV "
-
-    Returns
-    -------
-    list
-        A list of documents where each row of the CSV is a document
-    """
-    loader = CSVLoader(
-        mem_file, metadata_columns=["last_accessed_at", "created_at", "importance"]
-    )
-    docs = loader.load()
-    return docs
+# --- Streamlit callback functions
+def CB_Menu():
+    st.session_state.active_page = st.session_state.selected_option
 
 
 def create_new_memory_retriever(
-    decay_rate: float = 0.5, k: int = 5, mem_file: str = "./memory/memory.csv"
+    decay_rate: float = 0.5,
+    k: int = 5,
+    mem_file: str = "./memory/memory.csv",
+    collection_name: str = None,
 ):
     """Create a new vector store retriever unique to the agent."""
     # Define your embedding model
     embeddings_model = VertexAIEmbeddings()
-    vs = EnhancedChroma(embedding_function=embeddings_model)
+    vs = EnhancedChroma(
+        embedding_function=embeddings_model, collection_name=collection_name
+    )
     return ModTimeWeightedVectorStoreRetriever(
         vectorstore=vs,
         other_score_keys=["importance"],
@@ -75,13 +68,13 @@ def create_memory_bank():
     new_path = f"{path}/run_{new}"
     os.makedirs(new_path)
     os.makedirs(f"{new_path}/memory")
-    return new_path
+    return new, new_path
 
 
-def memory_fix():
-    # To resolve the list index out of range error
-    memory_retriever = create_new_memory_retriever()
-    memory_retriever.vectorstore.delete_collection()
+# def memory_fix():
+#    # To resolve the list index out of range error
+#    memory_retriever = create_new_memory_retriever()
+#    memory_retriever.vectorstore.delete_collection()
 
 
 def interview_agent(agent: StemssGenerativeAgent, user_name: str, message: str) -> str:
@@ -91,6 +84,9 @@ def interview_agent(agent: StemssGenerativeAgent, user_name: str, message: str) 
 
 
 if __name__ == "__main__":
+    # To preserve streamlit session states across pages
+    st.session_state.update(st.session_state)
+
     # Model and folders to be initialized once everything the app runs
     if "initalized" not in st.session_state:
         # Load the .env file
@@ -108,17 +104,21 @@ if __name__ == "__main__":
         )
         st.session_state["llm"] = llm
 
-        # Path output folder and memory storage
-        new_path = create_memory_bank()
+        # Get run number, path to each run
+        new, new_path = create_memory_bank()
+        st.session_state["new"] = new
         st.session_state["new_path"] = new_path
 
         # Execute list index out of range workaround
-        memory_fix()
+        # memory_fix()
 
         # Set initialized flag to true
         st.session_state["initalized"] = True
 
     if "selected_option" not in st.session_state:
+        st.session_state["active_page"] = "Home"
+        st.session_state["settings_check"] = False
+        st.session_state["generated_agents"] = False
         st.session_state["selected_option"] = "Home"
 
     # Navigation Menu
@@ -135,31 +135,45 @@ if __name__ == "__main__":
             icons=["house", "gear", "person", "chat-left-dots", "search"],
             menu_icon="list",
             default_index=0,
+            key="selected_option",
+            on_change=CB_Menu(),
         )
-        # Update session_state if a new option is selected
-        if st.session_state["selected_option"] != selected:
-            st.session_state["selected_option"] = selected
 
     # Home page
-    if st.session_state["selected_option"] == "Home":
+    if st.session_state["active_page"] == "Home":
         st.header("The world with only 2 agents but 4 overlords")
         st.caption("*Smaller than Smallville")
         st.image("./img/front.webp")
 
     # Settings page
-    if st.session_state["selected_option"] == "Settings":
+    if st.session_state["active_page"] == "Settings":
         st.title("All settings")
         st.header("Retriever settings")
-        st.session_state["decay_rate"] = st.slider("Decay Rate", 0.0, 1.0, 0.2, 0.05)
-        st.session_state["top_k"] = st.slider("Top K", 1, 10, 5, 1)
+        st.session_state["decay_rate"] = st.slider(f"**Decay Rate**", 0.0, 1.0, 0.2, 0.05)
+        st.session_state["top_k"] = st.slider(
+            f"**Top-k documents to retriever**", 1, 10, 5, 1
+        )
         st.divider()
         st.header("LLM settings")
         st.session_state["model_name"] = st.text_input(
-            "Which model to use?", value="text-bison@001"
+            f"**Which model to use?**", value="text-bison@001"
         )
-        st.session_state["temperature"] = st.slider("Temperature", 0.0, 1.0, 0.7, 0.05)
         st.session_state["max_output_tokens"] = st.number_input(
-            "Max Output Tokens", 1, 2048, 256
+            f"**Max Output Tokens**", 1, 2048, 256
+        )
+        st.session_state["temperature"] = st.slider(
+            f"**Temperature**", 0.0, 1.0, 0.7, 0.05
+        )
+
+        st.session_state["top_k"] = st.slider(
+            f"**top_k (k-number of highest probablity tokens for each step)**",
+            1,
+            40,
+            40,
+            1,
+        )
+        st.session_state["top_p"] = st.slider(
+            f"**top_p (Higher value increase randomness)**", 0.0, 1.0, 0.9, 0.05
         )
         if st.button("Reinitialize LLM"):
             llm = VertexAI(
@@ -169,21 +183,22 @@ if __name__ == "__main__":
             )
             st.session_state["llm"] = llm
 
-    if st.session_state["selected_option"] == "Initalize Agents":
+    if st.session_state["active_page"] == "Initalize Agents":
         st.title("Agents Initialization")
         st.divider()
-        set_bool = st.checkbox("Retriever settings set?")
+        st.checkbox(f"**I have visited the settings page**", key="settings_check")
 
-        if set_bool:
+        if st.session_state.settings_check == True:
             st.subheader("Agent names are generated randomly")
             if st.button("Generate Agents"):
+                st.session_state["generated_agents"] = True
                 progress = 0
                 my_bar = st.progress(progress, text="Generating agents. Please wait.")
                 agent_names = generate_agent_name(
                     model=st.session_state["llm"], num_of_agents=2
                 )
                 st.session_state["agent_names"] = agent_names
-                st.write(f"Agent names are {agent_names[0]} and {agent_names[1]}")
+                st.write(f"Agent names are **{agent_names[0]}** and **{agent_names[1]}**")
 
                 progress += 10
                 my_bar.progress(
@@ -220,11 +235,17 @@ if __name__ == "__main__":
                             f_object.close()
 
                     # Load CSV
-                    docs = load_documents()  # currently loads nothing
+                    docs = (
+                        general_utlis.load_documents()
+                    )  # currently loads by default the memory.csv
+
+                    # Initialize memory retriever
+                    collection_name = str(st.session_state["new"]) + "_" + agent_name
                     memory_retriever = create_new_memory_retriever(
                         decay_rate=st.session_state["decay_rate"],
                         k=st.session_state["top_k"],
                         mem_file=mem_file,
+                        collection_name=collection_name,
                     )
                     if len(docs) != 0:
                         memory_retriever.add_documents(docs)
@@ -272,15 +293,23 @@ if __name__ == "__main__":
 
                 with streamlit_utils.st_stdout("info"):
                     for single_agent in agents:
-                        print(single_agent.get_summary())
-                        print("\n")
+                        print(single_agent.get_summary(), "\n")
                 progress += 10
                 my_bar.progress(progress, text="Completed")
 
                 st.success("Successfully generated all agents")
 
+            # Get back generated agents's details if generated before
+            if st.session_state["generated_agents"]:
+                agent_names = st.session_state["agent_names"]
+                st.write(f"Agent names are **{agent_names[0]}** and **{agent_names[1]}**")
+                with streamlit_utils.st_stdout("info"):
+                    for single_agent in st.session_state["agents"]:
+                        print(single_agent.get_summary(), "\n")
+                st.success("Successfully generated all agents")
+
     # Interact with Agents page
-    if st.session_state["selected_option"] == "Interact with Agents":
+    if st.session_state["active_page"] == "Interact with Agents":
         if "agent_names" not in st.session_state:
             st.header("No agents to interact with")
         else:
@@ -316,5 +345,5 @@ if __name__ == "__main__":
                     add_message("user", things_to_say)
                     add_message("assistant", reply)
 
-    if st.session_state["selected_option"] == "View Detailed Logs":
+    if st.session_state["active_page"] == "View Detailed Logs":
         st.info("WIP. spot for logs")
