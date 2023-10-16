@@ -134,7 +134,7 @@ if __name__ == "__main__":
     # Home page
     if st.session_state["active_page"] == "Home":
         st.header("The world with only 2 agents but 4 overlords")
-        st.caption("*Smaller than Smallville")
+        st.caption("*Stemss-ville...smaller than Smallville")
         st.image("./img/front.webp")
 
     # Settings page
@@ -288,7 +288,7 @@ if __name__ == "__main__":
                     my_bar.progress(
                         progress, text=f"Adding memories for {single_agent.name}"
                     )
-                    with streamlit_utils.st_stdout("info"):
+                    with streamlit_utils.st_stdout("code"):
                         for observation in observations:
                             single_agent.memory.add_memory(observation)
 
@@ -305,7 +305,7 @@ if __name__ == "__main__":
             elif st.session_state["generated_agents"]:
                 agent_names = st.session_state["agent_names"]
                 st.write(f"Agent names are **{agent_names[0]}** and **{agent_names[1]}**")
-                with streamlit_utils.st_stdout("info"):
+                with streamlit_utils.st_stdout(""):
                     for single_agent in st.session_state["agents"]:
                         print(single_agent.get_summary(), "\n")
                 st.success("Successfully generated all agents")
@@ -340,6 +340,7 @@ if __name__ == "__main__":
             user_name = st.text_input("What is your name?", value="")
             things_to_say = st.text_input("What do you want to ask/talk about?", value="")
             st.session_state["things_to_say"] = things_to_say
+
             if st.button("Chat"):
                 reply = interview_agent(agents[selected_idx], user_name, things_to_say)
                 st.session_state["reply"] = reply
@@ -353,7 +354,10 @@ if __name__ == "__main__":
         st.write(f"**Force agents to talk to each other**")
         if st.button("Autobots, roll out"):
             agents = st.session_state["agents"]
-            with streamlit_utils.st_stdout("info"):
+            with streamlit_utils.st_stdout("code"):
+                for agent in agents:
+                    agent.memory.verbose = False
                 print(run_conversation(agents, f"You see {agents[1].name}"))
+
     if st.session_state["active_page"] == "View Detailed Logs":
         st.info("WIP. spot for logs")
