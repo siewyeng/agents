@@ -25,7 +25,7 @@ def run_conversation(
             stay_in_dialogue, observation = agent.generate_dialogue(
                 agent.name, observation, conversation_history=history
             )
-            print(f"{agent.name} said {observation}")
+            print(f"{agent.name}: {observation}")
             history.append({agent.name: observation})
             # if len(history)>4:
             #     history = history[-4:]
