@@ -84,7 +84,11 @@ class StemssGenerativeAgent(GenerativeAgent):
         )
 
     def _generate_dialogue_reaction(
-        self, speaker: str, observation: str, suffix: str
+        self,
+        speaker: str,
+        observation: str,
+        suffix: str,
+        conversation_history: List[str] = [],
     ) -> str:
         """React to a given observation or dialogue act."""
         prompt = PromptTemplate.from_template(
@@ -94,6 +98,7 @@ class StemssGenerativeAgent(GenerativeAgent):
             + "\nSummary of relevant context from {agent_name}'s memory:"
             + "\n{relevant_memories}"
             + "\nMost recent observations: {most_recent_memories}"
+            + "\nConversation History: {conversation_history}"
             + "\nObservation: {observation}"
             + "\n\n"
             + suffix
@@ -108,6 +113,7 @@ class StemssGenerativeAgent(GenerativeAgent):
             agent_name=self.name,
             observation=speaker + " says " + observation,
             agent_status=self.status,
+            conversation_history=conversation_history,
         )
         consumed_tokens = self.llm.get_num_tokens(
             prompt.format(most_recent_memories="", **kwargs)
@@ -115,15 +121,20 @@ class StemssGenerativeAgent(GenerativeAgent):
         kwargs[self.memory.most_recent_memories_token_key] = consumed_tokens
         return self.chain(prompt=prompt).run(**kwargs).strip()
 
-    def generate_dialogue(self, speaker: str, observation: str):
+    def generate_dialogue(
+        self, speaker: str, observation: str, conversation_history: List[str] = []
+    ):
         """React to a given observation."""
         call_to_action_template = (
-            "What would {agent_name} say? To end the conversation, write:"
-            ' GOODBYE: "what to say". Otherwise to continue the conversation,'
-            ' write: SAY: "what to say next"\n\n'
+            "What would {agent_name} say? End the conversation if Conversation History has more than 20 items end the conversation. "
+            'To end the conversation, write: GOODBYE: "what to say".'
+            'Otherwise to continue the conversation,  write: SAY: "what to say next"\n\n'
         )
         full_result = self._generate_dialogue_reaction(
-            speaker, observation, call_to_action_template
+            speaker,
+            observation,
+            call_to_action_template,
+            conversation_history=conversation_history,
         )
         result = full_result.strip().split("\n")[0]
         if "GOODBYE:" in result:
@@ -147,7 +158,7 @@ class StemssGenerativeAgent(GenerativeAgent):
             )
             return True, f"{self.name} said {response_text}"
         else:
-            return False, result
+            return True, result
 
     def _generate_reaction(
         self,
@@ -169,7 +180,6 @@ class StemssGenerativeAgent(GenerativeAgent):
             + suffix
         )
         agent_summary_description = self.get_summary(now=now)
-        print(agent_summary_description)
         relevant_memories_str = self.summarize_related_memories(observation)
         current_time_str = (
             datetime.now().strftime("%B %d, %Y, %I:%M %p")
@@ -186,7 +196,6 @@ class StemssGenerativeAgent(GenerativeAgent):
             most_recent_memories=conversation_history,
         )
         consumed_tokens = self.llm.get_num_tokens(prompt.format(**kwargs))
-        print(prompt.format(**kwargs))
         kwargs[self.memory.most_recent_memories_token_key] = consumed_tokens
         return self.chain(prompt=prompt).run(**kwargs).strip()
 

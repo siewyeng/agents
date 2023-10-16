@@ -15,18 +15,20 @@ def run_conversation(
     agents: List[StemssGenerativeAgent], initial_observation: str
 ) -> None:
     """Runs a conversation between agents and prints observations at every turn"""
-    print(initial_observation)
     _, observation = agents[1].generate_reaction(observation=initial_observation)
-    print("\n", observation)
     turns = 0
+    history = []
     while True:
         break_dialogue = False
         for agent in agents:
             # print(agent.generate_dialogue(, observation))
             stay_in_dialogue, observation = agent.generate_dialogue(
-                agent.name, observation
+                agent.name, observation, conversation_history=history
             )
-            print("\n", observation)
+            print(f"{agent.name} said {observation}")
+            history.append({agent.name: observation})
+            # if len(history)>4:
+            #     history = history[-4:]
             # observation = f"{agent.name} said {reaction}"
             if not stay_in_dialogue:
                 break_dialogue = True

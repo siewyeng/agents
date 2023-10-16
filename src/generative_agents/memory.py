@@ -29,11 +29,35 @@ class StemssGenerativeAgentMemory(GenerativeAgentMemory):
             + " extremely important (e.g., a break up, college"
             + " acceptance), rate the importance of the"
             + " following piece of memory. You must respond with a single integer."
+            + "Give an explanation for your response."
             "\nMemory: {memory_content}"
             "\nRating: "
+            "\nExplanation: "
         )
         prompt = PromptTemplate.from_template(template)
-
+        score = self.chain(prompt).run(memory_content=memory_content).strip()
+        if self.verbose:
+            logger.info(f"Importance score: {score}")
+        match = re.search(r"^\D*(\d+)", score)
+        if match:
+            return (float(match.group(1)) / 10) * self.importance_weight
+        else:
+            return 0.0
+    
+    def _score_memory_importance_with_explanation(self, memory_content: str) -> float:
+        """Score the absolute importance of the given memory."""
+        template = (
+            "On the scale of 1 to 10, where 1 is not important at all"
+            + " (e.g., brushing teeth, making bed) and 10 is"
+            + " extremely important (e.g., a break up, college"
+            + " acceptance), rate the importance of the"
+            + " following piece of memory. You must respond with a single integer."
+            + "Give an explanation for your response."
+            "\nMemory: {memory_content}"
+            "\nRating: "
+            "\nExplanation: "
+        )
+        prompt = PromptTemplate.from_template(template)
         score = self.chain(prompt).run(memory_content=memory_content).strip()
         if self.verbose:
             logger.info(f"Importance score: {score}")
