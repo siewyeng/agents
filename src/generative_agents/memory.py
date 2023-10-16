@@ -55,9 +55,3 @@ class StemssGenerativeAgentMemory(GenerativeAgentMemory):
             )
             content.append(f"- {created_time}: {mem.page_content.strip()}")
         return "\n".join([f"{mem}" for mem in content])
-
-    def addToCSV():
-        with open("event.csv", "a") as f_object:
-            writer_object = writer(f_object)
-            writer_object.writerow(List)
-            f_object.close()
