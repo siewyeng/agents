@@ -1,0 +1,12 @@
+ipykernel==6.25.1
+python-dotenv==1.0.0 
+pyodbc==4.0.39 
+langchain==0.0.312
+langchain-experimental==0.0.29
+transformers==4.34.0
+chromadb==0.4.14
+streamlit==1.27.2
+streamlit-option-menu==0.3.6
+streamlit-extras==0.3.4
+python-dotenv
+google-cloud-aiplatform
