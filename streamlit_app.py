@@ -16,7 +16,7 @@ from src.generative_agents.memory import StemssGenerativeAgentMemory
 from src.generators.agent import generate_agent_name, generate_characters
 from src.generators.schedule import generate_schedule
 from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
-from src.utils import general_utlis, streamlit_utils
+from src.utils import general_utils, streamlit_utils
 from src.vectorstores.chroma import EnhancedChroma
 
 logger = logging.getLogger(__name__)
@@ -100,7 +100,11 @@ if __name__ == "__main__":
             print(f"GOOGLE_APPLICATION_CREDENTIALS set to {google_creds_path}")
         # Instantiate and store llm to session state
         llm = VertexAI(
-            model_name="text-bison@001", max_output_tokens=256, temperature=0.7
+            model_name="text-bison@001",
+            max_output_tokens=256,
+            temperature=0.5,
+            top_p=0.9,
+            top_k=20,
         )
         st.session_state["llm"] = llm
 
@@ -119,6 +123,7 @@ if __name__ == "__main__":
         st.session_state["active_page"] = "Home"
         st.session_state["settings_check"] = False
         st.session_state["generated_agents"] = False
+        st.session_state["gen_count"] = 0
         st.session_state["selected_option"] = "Home"
 
     # Navigation Menu
@@ -130,6 +135,7 @@ if __name__ == "__main__":
                 "Settings",
                 "Initalize Agents",
                 "Interact with Agents",
+                "Agent-to-Agent",
                 "View Detailed Logs",
             ],
             icons=["house", "gear", "person", "chat-left-dots", "search"],
@@ -162,14 +168,14 @@ if __name__ == "__main__":
             f"**Max Output Tokens**", 1, 2048, 256
         )
         st.session_state["temperature"] = st.slider(
-            f"**Temperature**", 0.0, 1.0, 0.7, 0.05
+            f"**Temperature**", 0.0, 1.0, 0.5, 0.05
         )
 
         st.session_state["top_k"] = st.slider(
             f"**top_k (k-number of highest probablity tokens for each step)**",
             1,
             40,
-            40,
+            20,
             1,
         )
         st.session_state["top_p"] = st.slider(
@@ -180,6 +186,8 @@ if __name__ == "__main__":
                 model_name=st.session_state["model_name"],
                 max_output_tokens=st.session_state["max_output_tokens"],
                 temperature=st.session_state["temperature"],
+                top_p=st.session_state["top_p"],
+                top_k=st.session_state["top_k"],
             )
             st.session_state["llm"] = llm
 
@@ -189,9 +197,9 @@ if __name__ == "__main__":
         st.checkbox(f"**I have visited the settings page**", key="settings_check")
 
         if st.session_state.settings_check == True:
-            st.subheader("Agent names are generated randomly")
+            st.write("Note: Agent names are generated randomly")
             if st.button("Generate Agents"):
-                st.session_state["generated_agents"] = True
+                st.session_state["gen_count"] += 1
                 progress = 0
                 my_bar = st.progress(progress, text="Generating agents. Please wait.")
                 agent_names = generate_agent_name(
@@ -236,11 +244,18 @@ if __name__ == "__main__":
 
                     # Load CSV
                     docs = (
-                        general_utlis.load_documents()
+                        general_utils.load_documents()
                     )  # currently loads by default the memory.csv
 
                     # Initialize memory retriever
-                    collection_name = str(st.session_state["new"]) + "_" + agent_name
+                    collection_name = (
+                        str(st.session_state["new"])
+                        + "_"
+                        + str(st.session_state["gen_count"])
+                        + "_"
+                        + agent_name
+                    )
+                    print(collection_name)
                     memory_retriever = create_new_memory_retriever(
                         decay_rate=st.session_state["decay_rate"],
                         k=st.session_state["top_k"],
@@ -298,9 +313,10 @@ if __name__ == "__main__":
                 my_bar.progress(progress, text="Completed")
 
                 st.success("Successfully generated all agents")
+                st.session_state["generated_agents"] = True
 
             # Get back generated agents's details if generated before
-            if st.session_state["generated_agents"]:
+            elif st.session_state["generated_agents"]:
                 agent_names = st.session_state["agent_names"]
                 st.write(f"Agent names are **{agent_names[0]}** and **{agent_names[1]}**")
                 with streamlit_utils.st_stdout("info"):
