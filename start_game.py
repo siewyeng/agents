@@ -16,7 +16,7 @@ from src.generative_agents.memory import StemssGenerativeAgentMemory
 from src.generators.agent import generate_agent_name, generate_characters
 from src.generators.schedule import generate_schedule
 from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
-from src.tools.action import force_dialogue, interview_agent, run_conversation
+from src.tools.action import interview_agent, run_conversation
 from src.vectorstores.chroma import EnhancedChroma
 
 # Load the .env file
@@ -48,12 +48,12 @@ def load_documents() -> List[Document]:
 
 
 def create_new_memory_retriever(
-    decay_rate: float = 0.5, k: int = 5, mem_file: str = "./memory/memory.csv"
+    decay_rate: float = 0.5, k: int = 5, mem_file: str = "./memory/memory.csv", collection_name: str = None
 ):
     """Create a new vector store retriever unique to the agent."""
     # Define your embedding model
     embeddings_model = VertexAIEmbeddings()
-    vs = EnhancedChroma(embedding_function=embeddings_model)
+    vs = EnhancedChroma(embedding_function=embeddings_model, collection_name=collection_name)
     return ModTimeWeightedVectorStoreRetriever(
         vectorstore=vs,
         other_score_keys=["importance"],
@@ -107,10 +107,12 @@ if __name__ == "__main__":
                 writer_object.writerow(List)
                 f_object.close()
 
+        collection_name = str(new)+'_'+agent_name
+
         # Load CSV
         docs = load_documents()
         memory_retriever = create_new_memory_retriever(
-            decay_rate=args.decay, k=args.top_k, mem_file=mem_file
+            decay_rate=args.decay, k=args.top_k, mem_file=mem_file, collection_name=collection_name
         )
         if len(docs) != 0:
             memory_retriever.add_documents(docs)
