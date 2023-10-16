@@ -16,6 +16,7 @@ from src.generative_agents.memory import StemssGenerativeAgentMemory
 from src.generators.agent import generate_agent_name, generate_characters
 from src.generators.schedule import generate_schedule
 from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
+from src.tools.action import interview_agent, run_conversation
 from src.utils import general_utils, streamlit_utils
 from src.vectorstores.chroma import EnhancedChroma
 
@@ -71,18 +72,6 @@ def create_memory_bank():
     return new, new_path
 
 
-# def memory_fix():
-#    # To resolve the list index out of range error
-#    memory_retriever = create_new_memory_retriever()
-#    memory_retriever.vectorstore.delete_collection()
-
-
-def interview_agent(agent: StemssGenerativeAgent, user_name: str, message: str) -> str:
-    """Help the notebook user interact with the agent."""
-    new_message = f"{user_name} says {message}"
-    return agent.generate_dialogue_response(new_message)[1]
-
-
 if __name__ == "__main__":
     # To preserve streamlit session states across pages
     st.session_state.update(st.session_state)
@@ -113,9 +102,6 @@ if __name__ == "__main__":
         st.session_state["new"] = new
         st.session_state["new_path"] = new_path
 
-        # Execute list index out of range workaround
-        # memory_fix()
-
         # Set initialized flag to true
         st.session_state["initalized"] = True
 
@@ -138,7 +124,7 @@ if __name__ == "__main__":
                 "Agent-to-Agent",
                 "View Detailed Logs",
             ],
-            icons=["house", "gear", "person", "chat-left-dots", "search"],
+            icons=["house", "gear", "robot", "controller", "chat-left-dots", "search"],
             menu_icon="list",
             default_index=0,
             key="selected_option",
@@ -361,5 +347,10 @@ if __name__ == "__main__":
                     add_message("user", things_to_say)
                     add_message("assistant", reply)
 
+    if st.session_state["active_page"] == "Agent-to-Agent":
+        if st.button("Autobots, roll out"):
+            agents = st.session_state["agents"]
+            with streamlit_utils.st_stdout("info"):
+                print(run_conversation(agents, f"You see {agents[1].name}"))
     if st.session_state["active_page"] == "View Detailed Logs":
         st.info("WIP. spot for logs")
