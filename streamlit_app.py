@@ -288,7 +288,7 @@ if __name__ == "__main__":
                     my_bar.progress(
                         progress, text=f"Adding memories for {single_agent.name}"
                     )
-                    with streamlit_utils.st_stdout("code"):
+                    with streamlit_utils.st_stdout("info"):
                         for observation in observations:
                             single_agent.memory.add_memory(observation)
 
@@ -348,6 +348,9 @@ if __name__ == "__main__":
                     add_message("assistant", reply)
 
     if st.session_state["active_page"] == "Agent-to-Agent":
+        st.header("Agent-to-Agent")
+        st.divider()
+        st.write(f"**Force agents to talk to each other**")
         if st.button("Autobots, roll out"):
             agents = st.session_state["agents"]
             with streamlit_utils.st_stdout("info"):
