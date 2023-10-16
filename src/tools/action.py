@@ -5,10 +5,10 @@ from src.generative_agents.generative_agent import StemssGenerativeAgent
 USER_NAME = "STEMSS"
 
 
-def interview_agent(agent: StemssGenerativeAgent, message: str) -> str:
+def interview_agent(agent: StemssGenerativeAgent, user_name: str, message: str) -> str:
     """Help the notebook user interact with the agent."""
-    new_message = f"{USER_NAME} says {message}"
-    return agent.generate_dialogue(new_message)[1]
+    new_message = f"{user_name} says {message}"
+    return agent.generate_dialogue_response(new_message)[1]
 
 
 def run_conversation(
@@ -25,7 +25,7 @@ def run_conversation(
             stay_in_dialogue, observation = agent.generate_dialogue(
                 agent.name, observation, conversation_history=history
             )
-            print(f"{agent.name} said {observation}")
+            print(f"{agent.name}: {observation}")
             history.append({agent.name: observation})
             # if len(history)>4:
             #     history = history[-4:]

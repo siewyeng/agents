@@ -1,5 +1,7 @@
-from src.generative_agents.generative_agent import StemssGenerativeAgent
 import re
+
+from src.generative_agents.generative_agent import StemssGenerativeAgent
+
 
 def generate_schedule(model, agent):
     """
@@ -20,7 +22,7 @@ def generate_schedule(model, agent):
     schedule = schedule.replace("{", "").replace("}", "")
     schedule = schedule.replace("[", "").replace("]", "")
     schedule = schedule.replace("'", "")
-    pattern = r'[0-9]+.\s'
-    schedule = re.sub(pattern, '', schedule)
+    pattern = r"[0-9]+.\s"
+    schedule = re.sub(pattern, "", schedule)
     schedule = schedule.split("\n")
     return schedule
