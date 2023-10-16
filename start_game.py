@@ -16,7 +16,7 @@ from src.generative_agents.memory import StemssGenerativeAgentMemory
 from src.generators.agent import generate_agent_name, generate_characters
 from src.generators.schedule import generate_schedule
 from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
-from src.tools.action import force_dialogue, interview_agent, run_conversation
+from src.tools.action import interview_agent, run_conversation
 from src.vectorstores.chroma import EnhancedChroma
 
 # Load the .env file
