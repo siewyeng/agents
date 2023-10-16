@@ -119,7 +119,7 @@ if __name__ == "__main__":
             llm=llm,
             memory_retriever=memory_retriever,
             reflection_threshold=8,  # we will give this a relatively low number to show how reflection works
-            verbose=True,
+            verbose=False,
         )
 
         agent = StemssGenerativeAgent(
@@ -127,7 +127,6 @@ if __name__ == "__main__":
             age=agent_details["age"],
             traits=agent_details["traits"],
             status="",
-            memory_retriever=create_new_memory_retriever(),
             llm=llm,
             memory=agent_memory,
             background=agent_details["background"],
