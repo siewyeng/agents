@@ -91,9 +91,9 @@ if __name__ == "__main__":
         llm = VertexAI(
             model_name="text-bison@001",
             max_output_tokens=256,
-            temperature=0.5,
-            top_p=0.9,
-            top_k=20,
+            temperature=0.7,
+            top_p=0.7,
+            top_k=15,
         )
         st.session_state["llm"] = llm
 
@@ -154,18 +154,18 @@ if __name__ == "__main__":
             f"**Max Output Tokens**", 1, 2048, 256
         )
         st.session_state["temperature"] = st.slider(
-            f"**Temperature**", 0.0, 1.0, 0.5, 0.05
+            f"**Temperature**", 0.0, 1.0, 0.7, 0.05
         )
 
         st.session_state["top_k"] = st.slider(
             f"**top_k (k-number of highest probablity tokens for each step)**",
             1,
             40,
-            20,
+            15,
             1,
         )
         st.session_state["top_p"] = st.slider(
-            f"**top_p (Higher value increase randomness)**", 0.0, 1.0, 0.9, 0.05
+            f"**top_p (Higher value increase randomness)**", 0.0, 1.0, 0.7, 0.05
         )
         if st.button("Reinitialize LLM"):
             llm = VertexAI(
@@ -241,7 +241,6 @@ if __name__ == "__main__":
                         + "_"
                         + agent_name
                     )
-                    print(collection_name)
                     memory_retriever = create_new_memory_retriever(
                         decay_rate=st.session_state["decay_rate"],
                         k=st.session_state["top_k"],
