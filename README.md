@@ -1,10 +1,39 @@
-# End-to-end Project Template (On-prem | Run:ai)
+# STEMSS Mini Project
 
 ![AI Singapore's Kapitan Hull EPTG Onprem Run:ai Banner](./aisg-context/guide-site/docs/assets/images/kapitan-hull-eptg-onprem-runai-banner.png)
 
+## Description
+In this repository, we created 2 AI agents with the Vertex AI model. It is built upon the `langchain_experimental` library and deployment can be done on `streamlit`.
+
+## Deployment
+
+The code can easily deployed through running in the root directory of this repository:
+
+```streamlit run streamlit_app.py```
+
+We recommend creating a new environment for this project by executing the following command in the root directory
+
+```conda env create --name <ENVIRONMENTNAME> --file=conda.yml```
+
+### Navigating Streamlit
+Using the navigation sidebar in the image below, follow the order of the menu and configure the different hyperparameters for the model.
+
+![alt text](./img/streamlit_menu.png)
+
+After going through the first 3 buttons on the menu, the agents can now be initialised by clicking the "Generate Agents" button
+
+![alt text](./img/agent_initilisation.png)
+
+Finally, we can interact with any agent and even choose to inject memories to contextualise the interactions.
+
+![alt text](./img/agent_interaction.png)
+
+
+
+## Other information
 __Customised for `STEMSS Mini Project`__.
 
-__Project Description:__ Mini project on anything
+__Project Description:__ Creation of 2 interactive AI agents with Vertex AI LLM 
 
 This template that is also accompanied with an end-to-end guide was
 generated and customised using the
@@ -24,46 +53,9 @@ Inputs provided to `cookiecutter` for the generation of this
 template:
 
 - __`project_name`:__ STEMSS Mini Project
-- __`description`:__ Mini project on anything
+- __`description`:__ Creation of 2 interactive AI agents with Vertex AI LLM 
 - __`repo_name`:__ stems-mini-project
 - __`src_package_name`:__ stems_mini_project
 - __`src_package_name_short`:__ smp
-- __`runai_proj_name`:__ sample-project
-- __`harbor_registry_project_path`:__ registry.aisingapore.net/aiap-14-dsp/stems-mini-project
 - __`author_name`:__ STEMSS
 
-## End-to-end Guide
-
-This repository contains a myriad of boilerplate codes and configuration
-files. On how to make use of these boilerplates, this repository
-has an end-to-end guide on that.
-The guide's contents are written in Markdown formatted files, located
-within `aisg-context/guide-site` and its subdirectories. While the
-Markdown files can be viewed directly through text editors or IDEs,
-the contents are optimised for viewing through
-[`mkdocs`](https://www.mkdocs.org) (or
-[`mkdocs-material`](https://squidfunk.github.io/mkdocs-material)
-specifically)
-.
-A demo of the site for the guide can be viewed
-[here](https://aisingapore.github.io/ml-project-cookiecutter-onprem-runai)
-.
-
-To spin up the site on your local machine, you can create a virtual
-environment to install the dependencies first:
-
-```bash
-$ conda create -n aisg-eptg-onprem-runai-guide python=3.10.11
-$ conda activate aisg-eptg-onprem-runai-guide
-$ pip install -r aisg-context/guide-site/mkdocs-requirements.txt
-```
-
-After creating the virtual environment and installing the required
-dependencies, serve it like so:
-
-```bash
-$ mkdocs serve --config-file aisg-context/guide-site/mkdocs.yml
-```
-
-The site for the guide will then be viewable on
-[`http://localhost:8000`](http://localhost:8000).
