@@ -148,9 +148,13 @@ class StemssGenerativeAgent(GenerativeAgent):
             return True, f"{self.name} said {response_text}"
         else:
             return False, result
-        
+
     def _generate_reaction(
-        self, observation: str, suffix: str, now: Optional[datetime] = None, conversation_history: List[str] = []
+        self,
+        observation: str,
+        suffix: str,
+        now: Optional[datetime] = None,
+        conversation_history: List[str] = [],
     ) -> str:
         """React to a given observation or dialogue act."""
         prompt = PromptTemplate.from_template(
@@ -179,18 +183,18 @@ class StemssGenerativeAgent(GenerativeAgent):
             agent_name=self.name,
             observation=observation,
             agent_status=self.status,
-            most_recent_memories=conversation_history
+            most_recent_memories=conversation_history,
         )
-        consumed_tokens = self.llm.get_num_tokens(
-            prompt.format(**kwargs)
-        )
+        consumed_tokens = self.llm.get_num_tokens(prompt.format(**kwargs))
         print(prompt.format(**kwargs))
         kwargs[self.memory.most_recent_memories_token_key] = consumed_tokens
         return self.chain(prompt=prompt).run(**kwargs).strip()
-    
 
     def generate_dialogue_response(
-        self, observation: str, now: Optional[datetime] = None, conversation_history: List[str] = [],
+        self,
+        observation: str,
+        now: Optional[datetime] = None,
+        conversation_history: List[str] = [],
     ) -> Tuple[bool, str]:
         """React to a given observation."""
         call_to_action_template = (
@@ -199,7 +203,10 @@ class StemssGenerativeAgent(GenerativeAgent):
             ' write: SAY: "what to say next"\n\n'
         )
         full_result = self._generate_reaction(
-            observation, call_to_action_template, now=now, conversation_history=conversation_history
+            observation,
+            call_to_action_template,
+            now=now,
+            conversation_history=conversation_history,
         )
         result = full_result.strip().split("\n")[0]
         if "GOODBYE:" in result:
