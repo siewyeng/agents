@@ -2,6 +2,7 @@ import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import chromadb
+
 # from chromadb.errors import NoIndexException
 from langchain.schema import Document
 from langchain.vectorstores import Chroma

@@ -1,7 +1,7 @@
 import argparse
 import os
-from typing import List
 from csv import writer
+from typing import List
 
 from dotenv import load_dotenv
 from langchain.document_loaders import CSVLoader
@@ -13,11 +13,11 @@ from vertexai.preview.language_models import TextGenerationModel
 
 from src.generative_agents.generative_agent import StemssGenerativeAgent
 from src.generative_agents.memory import StemssGenerativeAgentMemory
-from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
-from src.vectorstores.chroma import EnhancedChroma
-from src.generators.schedule import generate_schedule
 from src.generators.agent import generate_agent_name, generate_characters
-from src.tools.action import interview_agent, run_conversation
+from src.generators.schedule import generate_schedule
+from src.retrievers.time_weighted_retriever import ModTimeWeightedVectorStoreRetriever
+from src.tools.action import force_dialogue, interview_agent, run_conversation
+from src.vectorstores.chroma import EnhancedChroma
 
 # Load the .env file
 load_dotenv()
@@ -47,13 +47,19 @@ def load_documents() -> List[Document]:
     return docs
 
 
-def create_new_memory_retriever(decay_rate: float = 0.5, k: int = 5, mem_file:str="./memory/memory.csv"):
+def create_new_memory_retriever(
+    decay_rate: float = 0.5, k: int = 5, mem_file: str = "./memory/memory.csv"
+):
     """Create a new vector store retriever unique to the agent."""
     # Define your embedding model
     embeddings_model = VertexAIEmbeddings()
     vs = EnhancedChroma(embedding_function=embeddings_model)
     return ModTimeWeightedVectorStoreRetriever(
-        vectorstore=vs, other_score_keys=["importance"], decay_rate=decay_rate, k=k, mem_file=mem_file
+        vectorstore=vs,
+        other_score_keys=["importance"],
+        decay_rate=decay_rate,
+        k=k,
+        mem_file=mem_file,
     )
 
 
@@ -68,13 +74,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    path='./outputs'
+    path = "./outputs"
     all_folders = os.listdir(path)
     new = 1
     index = []
-    if len(all_folders)!=0:
+    if len(all_folders) != 0:
         for folder in all_folders:
-            index.append(int(folder.replace('run_', '')))
+            index.append(int(folder.replace("run_", "")))
         index.sort()
         latest = index[-1]
         new = int(latest) + 1
@@ -82,31 +88,31 @@ if __name__ == "__main__":
     os.makedirs(new_path)
     os.makedirs(f"{new_path}/memory")
 
-
-    agents = []
-    #Generate agent
     llm = VertexAI(model_name="text-bison@001", max_output_tokens=256, temperature=0.2)
+
+    # Generate agent
+    agents = []
     agent_names = generate_agent_name(model=llm, num_of_agents=2)
     for agent_name in agent_names:
-
-        llm = VertexAI(model_name="text-bison@001", max_output_tokens=256, temperature=0.7)
-        #generate agent details
+        # generate agent details
         agent_details = generate_characters(model=llm, agent_name=agent_name)
-        agent_details['name']=agent_name
+        agent_details["name"] = agent_name
 
-        #Create csv if it doesn't exist
+        # Create csv if it doesn't exist
         mem_file = f"{new_path}/memory/{agent_name}.csv"
-        if  not os.path.exists(mem_file):
-            with open(mem_file, 'a') as f_object:
+        if not os.path.exists(mem_file):
+            with open(mem_file, "a") as f_object:
                 List = ["created_at", "last_accessed_at", "observations", "importance"]
                 writer_object = writer(f_object)
                 writer_object.writerow(List)
                 f_object.close()
 
-        #Load CSV
+        # Load CSV
         docs = load_documents()
-        memory_retriever = create_new_memory_retriever(decay_rate=args.decay, k=args.top_k ,mem_file=mem_file)
-        if(len(docs)!=0):
+        memory_retriever = create_new_memory_retriever(
+            decay_rate=args.decay, k=args.top_k, mem_file=mem_file
+        )
+        if len(docs) != 0:
             memory_retriever.add_documents(docs)
 
         agent_memory = StemssGenerativeAgentMemory(

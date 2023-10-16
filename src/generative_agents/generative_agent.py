@@ -7,7 +7,7 @@ from langchain_experimental.generative_agents.generative_agent import Generative
 
 
 class StemssGenerativeAgent(GenerativeAgent):
-    background:str
+    background: str
     system_prompt: str = (
         "A chat between a curious user and an artificial intelligence assistant. The assistant "
         "gives helpful, detailed, and polite answers to the user's questions.\n"
@@ -75,10 +75,13 @@ class StemssGenerativeAgent(GenerativeAgent):
         # The agent seeks to think about their core characteristics.
         return (
             self.chain(prompt)
-            .run(name=self.name,background=self.background, queries=[f"{self.name}'s core characteristics"])
+            .run(
+                name=self.name,
+                background=self.background,
+                queries=[f"{self.name}'s core characteristics"],
+            )
             .strip()
         )
-    
 
     def _generate_dialogue_reaction(
         self, speaker: str, observation: str, suffix: str

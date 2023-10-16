@@ -1,5 +1,7 @@
-from langchain.prompts import PromptTemplate 
 import json
+
+from langchain.prompts import PromptTemplate
+
 
 def generate_agent_name(model, num_of_agents):
     template = """
@@ -7,13 +9,11 @@ def generate_agent_name(model, num_of_agents):
 
     Answer: """
 
-    prompt_template = PromptTemplate(
-        input_variables=["num_of_agents"],
-        template=template
-    )
+    prompt_template = PromptTemplate(input_variables=["num_of_agents"], template=template)
 
     agent_names = model(prompt_template.format(num_of_agents=num_of_agents))
     return agent_names.split(", ")
+
 
 def generate_characters(model, agent_name):
     template = """
@@ -25,10 +25,7 @@ def generate_characters(model, agent_name):
 
     Answer: """
 
-    prompt_template = PromptTemplate(
-        input_variables=["name"],
-        template=template
-    )
+    prompt_template = PromptTemplate(input_variables=["name"], template=template)
 
     agent_details = model(prompt_template.format(name=agent_name))
     return json.loads(agent_details)
