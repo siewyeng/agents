@@ -7,6 +7,8 @@ In this repository, we created 2 AI agents with the Vertex AI model. It is built
 
 ## Deployment
 
+Note: This code uses, by default, VertexAI. Please ensure that you have your credentials ready and create a `.env` file with `GOOGLE_APPLICATION_CREDENTIALS` as the path to where the credentials are stored.
+
 The code can easily deployed through running in the root directory of this repository:
 
 ```streamlit run streamlit_app.py```
@@ -24,11 +26,20 @@ After going through the first 3 buttons on the menu, the agents can now be initi
 
 ![alt text](./img/agent_initilisation.png)
 
-Finally, we can interact with any agent and even choose to inject memories to contextualise the interactions.
+We can interact with any agent through the `interact_agent` function and even choose to inject memories to contextualise the interactions
 
 ![alt text](./img/agent_interaction.png)
 
+Additionally, the agents can be prompted to interact with one another through the `run_conversation` function in the code and custom prompts can be used.
 
+![alt text](./img/agent_conversation.png)
+
+### Docker
+
+1. Create Docker image
+```docker build .```
+2. Run Docker Container on port
+```docker run -p 80:8501 --name <CONTAINERNAME> <IMAGENAME>```
 
 ## Other information
 __Customised for `STEMSS Mini Project`__.
