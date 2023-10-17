@@ -15,9 +15,7 @@ We recommend creating a new environment for this project by executing the follow
 
 ```conda env create --name <ENVIRONMENTNAME> --file=conda.yml```
 
-Alternatively, you can build a docker image by running the command:
-
-=== "Windows PowerShell"
+Alternatively, you can build a docker image by running the command (Windows Powershell)
 
     ```
     $ docker build `
