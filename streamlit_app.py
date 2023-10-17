@@ -84,7 +84,9 @@ if __name__ == "__main__":
         google_creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         # Ensure that the variable has been set correctly
         if google_creds_path is None:
-            raise ValueError("GOOGLE_APPLICATION_CREDENTIALS is not set in the .env file")
+            raise ValueError(
+                "GOOGLE_APPLICATION_CREDENTIALS is not set in the .env file"
+            )
         else:
             print(f"GOOGLE_APPLICATION_CREDENTIALS set to {google_creds_path}")
         # Instantiate and store llm to session state
@@ -146,7 +148,9 @@ if __name__ == "__main__":
     if st.session_state["active_page"] == "Settings":
         st.title("All settings")
         st.header("Retriever settings")
-        st.session_state["decay_rate"] = st.slider(f"**Decay Rate**", 0.0, 1.0, 0.2, 0.05)
+        st.session_state["decay_rate"] = st.slider(
+            f"**Decay Rate**", 0.0, 1.0, 0.2, 0.05
+        )
         st.session_state["top_k"] = st.slider(
             f"**Top-k documents to retriever**", 1, 10, 5, 1
         )
@@ -197,7 +201,9 @@ if __name__ == "__main__":
                     model=st.session_state["llm"], num_of_agents=2
                 )
                 st.session_state["agent_names"] = agent_names
-                st.write(f"Agent names are **{agent_names[0]}** and **{agent_names[1]}**")
+                st.write(
+                    f"Agent names are **{agent_names[0]}** and **{agent_names[1]}**"
+                )
 
                 progress += 10
                 my_bar.progress(
@@ -308,7 +314,9 @@ if __name__ == "__main__":
             # Get back generated agents's details if generated before
             elif st.session_state["generated_agents"]:
                 agent_names = st.session_state["agent_names"]
-                st.write(f"Agent names are **{agent_names[0]}** and **{agent_names[1]}**")
+                st.write(
+                    f"Agent names are **{agent_names[0]}** and **{agent_names[1]}**"
+                )
                 with streamlit_utils.st_stdout(""):
                     for single_agent in st.session_state["agents"]:
                         print(single_agent.get_summary(), "\n")
@@ -342,7 +350,9 @@ if __name__ == "__main__":
             st.divider()
             st.subheader("Chat with Agent")
             user_name = st.text_input("What is your name?", value="")
-            things_to_say = st.text_input("What do you want to ask/talk about?", value="")
+            things_to_say = st.text_input(
+                "What do you want to ask/talk about?", value=""
+            )
             st.session_state["things_to_say"] = things_to_say
 
             if st.button("Chat"):
@@ -356,12 +366,21 @@ if __name__ == "__main__":
         st.header("Agent-to-Agent")
         st.divider()
         st.write(f"**Force agents to talk to each other**")
+        st.subheader("Inject Prompt")
+        agents = st.session_state["agents"]
+        default_prompt = f"You see {agents[1].name}"
+        mem_to_inject = st.text_input(
+            f"Otherwise, default prompt is '{default_prompt}'", value=""
+        )
         if st.button("Autobots, roll out"):
             agents = st.session_state["agents"]
             with streamlit_utils.st_stdout("code"):
                 for agent in agents:
                     agent.memory.verbose = False
-                print(run_conversation(agents, f"You see {agents[1].name}"))
+                if mem_to_inject:
+                    print(run_conversation(agents, mem_to_inject))
+                else:
+                    print(run_conversation(agents, f"You see {agents[1].name}"))
 
     if st.session_state["active_page"] == "View Detailed Logs":
         st.info("WIP. spot for logs")
