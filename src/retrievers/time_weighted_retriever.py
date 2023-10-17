@@ -8,8 +8,8 @@ from langchain.retrievers import TimeWeightedVectorStoreRetriever
 from langchain.schema import Document
 
 
-def _get_hours_passed(time: datetime, ref_time: datetime | str) -> float:
-    """Get the hours passed between two datetime objects."""
+def _get_seconds_passed(time: datetime, ref_time: datetime | str) -> float:
+    """Get the seconds passed between two datetime objects."""
     if isinstance(ref_time, str):
         ref_time = datetime.fromisoformat(ref_time)
     return (time - ref_time).total_seconds()
@@ -47,11 +47,11 @@ class ModTimeWeightedVectorStoreRetriever(TimeWeightedVectorStoreRetriever):
         current_time: datetime,
     ) -> float:
         """Return the combined score for a document."""
-        hours_passed = _get_hours_passed(
+        seconds_passed = _get_seconds_passed(
             current_time,
             document.metadata["last_accessed_at"],
         )
-        score = (1.0 - self.decay_rate) ** hours_passed
+        score = (1.0 - self.decay_rate) ** seconds_passed
         for key in self.other_score_keys:
             if key in document.metadata:
                 score += int(float(document.metadata[key]))
