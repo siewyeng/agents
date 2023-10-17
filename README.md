@@ -19,7 +19,7 @@ Alternatively, you can build a docker image by running the command (Windows Powe
 
     ```
     $ docker build `
-        -t registry.aisingapore.net/aiap-14-dsp/stems-mini-project/streamlit-app:0.1.0 `
+        -t streamlit-app:0.1.0 `
         -f docker/streamlit-app.Dockerfile .
     ```
 
