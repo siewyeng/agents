@@ -48,12 +48,17 @@ def load_documents() -> List[Document]:
 
 
 def create_new_memory_retriever(
-    decay_rate: float = 0.5, k: int = 5, mem_file: str = "./memory/memory.csv", collection_name: str = None
+    decay_rate: float = 0.5,
+    k: int = 5,
+    mem_file: str = "./memory/memory.csv",
+    collection_name: str = None,
 ):
     """Create a new vector store retriever unique to the agent."""
     # Define your embedding model
     embeddings_model = VertexAIEmbeddings()
-    vs = EnhancedChroma(embedding_function=embeddings_model, collection_name=collection_name)
+    vs = EnhancedChroma(
+        embedding_function=embeddings_model, collection_name=collection_name
+    )
     return ModTimeWeightedVectorStoreRetriever(
         vectorstore=vs,
         other_score_keys=["importance"],
@@ -107,12 +112,16 @@ if __name__ == "__main__":
                 writer_object.writerow(List)
                 f_object.close()
 
-        collection_name = str(new)+'_'+agent_name
-
         # Load CSV
         docs = load_documents()
+
+        # Initialize memory retriever
+        collection_name = str(new) + "_" + agent_name
         memory_retriever = create_new_memory_retriever(
-            decay_rate=args.decay, k=args.top_k, mem_file=mem_file, collection_name=collection_name
+            decay_rate=args.decay,
+            k=args.top_k,
+            mem_file=mem_file,
+            collection_name=collection_name,
         )
         if len(docs) != 0:
             memory_retriever.add_documents(docs)
