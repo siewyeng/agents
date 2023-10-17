@@ -120,7 +120,7 @@ class StemssGenerativeAgent(GenerativeAgent):
     def generate_dialogue(self, speaker: str, observation: str, conversation_history: List[str] = []):
         """React to a given observation."""
         call_to_action_template = (
-            "What would {agent_name} say? End the conversation if Conversation History has more than 20 items end the conversation. "
+            "What would {agent_name} say? End the conversation if Conversation History has more than 20 items. Do not admit you are an AI."
             'To end the conversation, write: GOODBYE: "what to say".'
             'Otherwise to continue the conversation,  write: SAY: "what to say next"\n\n'
         )
