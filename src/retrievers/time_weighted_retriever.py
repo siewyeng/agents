@@ -12,7 +12,7 @@ def _get_hours_passed(time: datetime, ref_time: datetime | str) -> float:
     """Get the hours passed between two datetime objects."""
     if isinstance(ref_time, str):
         ref_time = datetime.fromisoformat(ref_time)
-    return (time - ref_time).total_seconds() / 3600
+    return (time - ref_time).total_seconds()
 
 
 class ModTimeWeightedVectorStoreRetriever(TimeWeightedVectorStoreRetriever):

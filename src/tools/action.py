@@ -7,6 +7,7 @@ USER_NAME = "STEMSS"
 
 def interview_agent(agent: StemssGenerativeAgent, user_name: str, message: str) -> str:
     """Help the notebook user interact with the agent."""
+
     new_message = f"{user_name} says {message}"
     return agent.generate_dialogue_response(new_message)[1]
 
@@ -36,3 +37,4 @@ def run_conversation(
         if break_dialogue:
             break
         turns += 1
+    return history

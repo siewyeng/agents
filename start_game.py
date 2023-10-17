@@ -154,4 +154,4 @@ if __name__ == "__main__":
     for single_agent in agents:
         print(single_agent.get_summary())
 
-    run_conversation(agents, f"You see {agents[1].name}")
+    run_conversation(agents, f"You see {agents[0].name}")
