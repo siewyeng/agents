@@ -15,13 +15,15 @@ We recommend creating a new environment for this project by executing the follow
 
 ```conda env create --name <ENVIRONMENTNAME> --file=conda.yml```
 
-Alternatively, you can build a docker image by running the command
+Alternatively, you can build a docker image by running the command:
+
 === "Windows PowerShell"
-```
-$docker build `
-	-t registry.aisingapore.net/aiap-14-dsp/stems-mini-project/streamlit-app:0.1.0 `
-	-f docker/streamlit-app.Dockerfile .
-```
+
+    ```
+    $ docker build `
+        -t registry.aisingapore.net/aiap-14-dsp/stems-mini-project/streamlit-app:0.1.0 `
+        -f docker/streamlit-app.Dockerfile .
+    ```
 
 ### Navigating Streamlit
 Using the navigation sidebar in the image below, follow the order of the menu and configure the different hyperparameters for the model.
