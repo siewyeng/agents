@@ -133,9 +133,14 @@ if __name__ == "__main__":
 
     # Home page
     if st.session_state["active_page"] == "Home":
+        left_co, cent_co, last_co = st.columns([1, 6, 1])
+        with cent_co:
+            st.image("./img/stemss_mini_project_logo.png", width=500)
         st.header("The world with only 2 agents but 4 overlords")
         st.caption("*Stemss-ville...smaller than Smallville")
-        st.image("./img/front.webp")
+        left_co2, cent_co2, last_co2 = st.columns([0.3, 6.5, 0.3])
+        with cent_co2:
+            st.image("./img/front.jpg", width=600)
 
     # Settings page
     if st.session_state["active_page"] == "Settings":
